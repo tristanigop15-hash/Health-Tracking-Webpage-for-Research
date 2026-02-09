@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Health Tracker</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;margin:0;padding:20px;color:#333}
+.container{max-width:900px;margin:0 auto}
+.card{background:#fff;padding:16px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08);margin-bottom:16px}
+h1{color:#27ae60;margin:0 0 10px}
+label{display:block;margin-top:8px;font-weight:600}
+input,select,button{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #ddd;box-sizing:border-box}
+button{background:#27ae60;color:#fff;border:none;cursor:pointer}
+.row{display:flex;gap:12px}
+.col{flex:1}
+.small{font-size:0.9rem;color:#555}
+canvas{max-width:100%;height:220px}
+.hidden{display:none}
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.badge{padding:8px 10px;border-radius:8px;background:#eafaf1;border:1px solid #d6f0e0;display:flex;align-items:center;gap:8px}
+.note{font-size:0.9rem;color:#666;margin-top:6px}
+</style>
+
+<style>
+body { background:#f4f9f6; }
+.card {
+  background:#ffffff;
+  padding:18px;
+  margin:18px 0;
+  border-radius:12px;
+  box-shadow:0 4px 8px rgba(0,0,0,0.08);
+}
+.card h2, .card h3 {
+  color:#2e7d32;
+}
+.note {
+  font-size:0.95em;
+  color:#444;
+}
+</style>
+
+</head>
+<body>
+
+<div class="card">
+<h2>Health Tracker System</h2>
+<p class="note">
+This web-based Health Tracker System helps students record and monitor their daily health activities
+such as steps, sleep hours, and water intake. It supports health awareness and promotes better lifestyle habits.
+</p>
+</div>
+
+<div class="card">
+<h3>System Purpose (For ICT Defense)</h3>
+<p class="note">
+The purpose of this system is to provide an easy-to-use platform for students to track health-related behaviors,
+view summaries, calculate BMI, and download health reports for monitoring and academic purposes.
+</p>
+</div>
+
+<div class="card">
+<h3>How to Use the System</h3>
+<ol class="note">
+<li>Register or log in to your account.</li>
+<li>Enter your daily health data.</li>
+<li>View your dashboard summary and BMI result.</li>
+<li>Download your health report if needed.</li>
+</ol>
+</div>
+
+<div class="container">
+  <h1>Health Tracker</h1>
+
+  <!-- Auth Card -->
+  <div id="authCard" class="card">
+    <h2 id="authHeader">Login</h2>
+    <label>Username</label>
+    <input id="authUsername" placeholder="username">
+    <label>Password</label>
+    <input id="authPassword" type="password" placeholder="password">
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button style="flex:1" onclick="login()">Login</button>
+      <button style="flex:1;background:#2980b9" onclick="showRegister()">Register</button>
+    </div>
+    <p id="authMsg" class="small"></p>
+  </div>
+
+  <!-- Register Card -->
+  <div id="regCard" class="card hidden">
+    <h2>Register</h2>
+    <label>Choose username</label>
+    <input id="regUsername" placeholder="username">
+    <label>Choose password</label>
+    <input id="regPassword" type="password" placeholder="password">
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button style="flex:1" onclick="register()">Create Account</button>
+      <button style="flex:1;background:#95a5a6" onclick="showLogin()">Cancel</button>
+    </div>
+    <p id="regMsg" class="small"></p>
+  </div>
+
+  <!-- App -->
+  <div id="app" class="hidden">
+
+    <!-- Header -->
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <strong>Welcome, <span id="userLabel"></span></strong>
+        <div class="small">Your personal health dashboard</div>
+      </div>
+      <div style="width:180px">
+        <button onclick="logout()" style="background:#e74c3c">Logout</button>
+      </div>
+    </div>
+
+    <!-- Entry Form -->
+    <div class="card">
+      <h3>Daily Health Input</h3>
+      <div class="note">Entries are timestamped automatically by the app (using device time or trusted online time if available).</div>
+      <div class="row" style="margin-top:8px">
+        <div class="col">
+          <label>Date (auto)</label>
+          <input type="date" id="entryDate" readonly>
+        </div>
+        <div class="col">
+          <label>Steps</label>
+          <input type="number" id="entrySteps" placeholder="e.g. 5000">
+        </div>
+        <div class="col">
+          <label>Weight (kg)</label>
+          <input type="number" id="entryWeight" placeholder="e.g. 68.5" step="0.1">
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div class="col">
+          <label>Sleep (hours)</label>
+          <input type="number" id="entrySleep" placeholder="e.g. 7" step="0.1">
+        </div>
+        <div class="col">
+          <label>Water (glasses)</label>
+          <input type="number" id="entryWater" placeholder="e.g. 8">
+        </div>
+        <div class="col">
+          <label>Mood</label>
+          <select id="entryMood">
+            <option value="😊">😊 Happy</option>
+            <option value="😐">😐 Neutral</option>
+            <option value="😔">😔 Sad</option>
+            <option value="😴">😴 Tired</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <button onclick="saveEntry()">Save Entry</button>
+      </div>
+      <p id="entryMsg" class="small"></p>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="card">
+      <h3>Summary Dashboard</h3>
+      <div class="row">
+        <div class="col" id="summaryCards"></div>
+        <div class="col">
+          <label>Step Goal</label>
+          <input type="number" id="stepGoal" value="10000">
+          <progress id="stepProgress" value="0" max="10000"></progress>
+          <p id="stepProgressText" class="small">0 / 10000 steps</p>
+          <h4 style="margin-top:12px">Badges</h4>
+          <div id="badgesArea" class="badges"></div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <canvas id="chartSteps"></canvas>
+        <canvas id="chartWeight" style="margin-top:12px"></canvas>
+        <canvas id="chartSleep" style="margin-top:12px"></canvas>
+      </div>
+    </div>
+
+    <!-- BMI -->
+    <div class="card">
+      <h3>BMI Calculator</h3>
+      <div class="row">
+        <div class="col">
+          <label>Height (cm)</label>
+          <input id="bmiHeight" type="number" placeholder="e.g. 170">
+        </div>
+        <div class="col">
+          <label>Weight (kg)</label>
+          <input id="bmiWeight" type="number" placeholder="e.g. 68.5">
+        </div>
+        <div class="col" style="align-self:end">
+          <button onclick="calcBMI()">Calculate</button>
+        </div>
+      </div>
+      <p id="bmiResult" class="small"></p>
+    </div>
+
+    <!-- Records -->
+    <div class="card">
+      <h3>Records</h3>
+      <div id="recordsList" class="small"></div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button onclick="exportCSV()">Export CSV</button>
+        <button onclick="clearUserData()">Clear My Data</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Silent trusted time: try worldtimeapi.org then fall back silently to device time
+async function getTrustedDateISO() {
+  try {
+    const resp = await fetch('https://worldtimeapi.org/api/ip', {cache: 'no-store'});
+    if (resp.ok) {
+      const j = await resp.json();
+      return new Date(j.datetime).toISOString();
+    }
+  } catch (e) {
+    // silent fallback
+  }
+  return new Date().toISOString();
+}
+
+// Storage keys
+const USERS_KEY = 'ht_users'; // array of {username,password}
+function usersLoad(){ return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); }
+function usersSave(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+function getUserDataKey(username){ return 'ht_data_' + username; }
+function getBadgesKey(username){ return 'ht_badges_' + username; }
+function getProfileKey(username){ return 'ht_profile_' + username; }
+
+// UI helpers
+function showRegister(){ document.getElementById('authCard').classList.add('hidden'); document.getElementById('regCard').classList.remove('hidden'); }
+function showLogin(){ document.getElementById('regCard').classList.add('hidden'); document.getElementById('authCard').classList.remove('hidden'); document.getElementById('authMsg').innerText=''; document.getElementById('regMsg').innerText=''; }
+
+// Register/login
+function register(){
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  if(!username || !password){ document.getElementById('regMsg').innerText='Enter username & password'; return; }
+  let users = usersLoad();
+  if(users.find(u => u.username === username)){ document.getElementById('regMsg').innerText='Username already exists'; return; }
+  users.push({username, password});
+  usersSave(users);
+  localStorage.setItem(getUserDataKey(username), JSON.stringify([]));
+  localStorage.setItem(getBadgesKey(username), JSON.stringify([]));
+  localStorage.setItem(getProfileKey(username), JSON.stringify({}));
+  document.getElementById('regMsg').innerText = 'Account created! You can now login.';
+}
+
+// login
+function login(){
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!username || !password){ document.getElementById('authMsg').innerText='Enter username & password'; return; }
+  const users = usersLoad();
+  const u = users.find(x => x.username === username && x.password === password);
+  if(!u){ document.getElementById('authMsg').innerText='Invalid credentials'; return; }
+  sessionStorage.setItem('ht_active', username);
+  showApp();
+}
+
+// logout
+function logout(){ sessionStorage.removeItem('ht_active'); document.getElementById('app').classList.add('hidden'); document.getElementById('authCard').classList.remove('hidden'); document.getElementById('authMsg').innerText='Logged out'; }
+
+// show app
+function showApp(){ document.getElementById('authCard').classList.add('hidden'); document.getElementById('regCard').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); document.getElementById('userLabel').innerText = sessionStorage.getItem('ht_active'); setEntryDateToToday(); renderAll(); }
+
+// data per user
+function loadUserData(){ const username = sessionStorage.getItem('ht_active'); if(!username) return []; return JSON.parse(localStorage.getItem(getUserDataKey(username)) || '[]'); }
+function saveUserData(records){ const username = sessionStorage.getItem('ht_active'); if(!username) return; localStorage.setItem(getUserDataKey(username), JSON.stringify(records)); }
+function loadBadges(){ const username = sessionStorage.getItem('ht_active'); if(!username) return []; return JSON.parse(localStorage.getItem(getBadgesKey(username)) || '[]'); }
+function saveBadges(badges){ const username = sessionStorage.getItem('ht_active'); if(!username) return; localStorage.setItem(getBadgesKey(username), JSON.stringify(badges)); }
+function loadProfile(){ const username = sessionStorage.getItem('ht_active'); if(!username) return {}; return JSON.parse(localStorage.getItem(getProfileKey(username)) || '{}'); }
+function saveProfile(p){ const username = sessionStorage.getItem('ht_active'); if(!username) return; localStorage.setItem(getProfileKey(username), JSON.stringify(p)); }
+
+// Save entry (uses silent trusted date fallback)
+async function saveEntry(){
+  const username = sessionStorage.getItem('ht_active'); if(!username){ alert('Not logged in'); return; }
+  const trustedISO = await getTrustedDateISO();
+  const trustedDate = trustedISO.slice(0,10);
+  const date = trustedDate; // force date to trusted date
+
+  const steps = Number(document.getElementById('entrySteps').value) || 0;
+  const weight = Number(document.getElementById('entryWeight').value) || 0;
+  const sleep = Number(document.getElementById('entrySleep').value) || 0;
+  const water = Number(document.getElementById('entryWater').value) || 0;
+  const mood = document.getElementById('entryMood').value || '';
+
+  let records = loadUserData();
+  const idx = records.findIndex(r => r.date === date);
+  const rec = {date, steps, weight, sleep, water, mood, createdAt: trustedISO};
+  if(idx >= 0) records[idx] = rec; else records.push(rec);
+  records.sort((a,b)=> new Date(a.date)-new Date(b.date));
+  saveUserData(records);
+  document.getElementById('entryMsg').innerText = 'Saved ✔';
+  setTimeout(()=> document.getElementById('entryMsg').innerText = '', 1400);
+  checkBadgesForRecord(rec, records);
+  renderAll();
+}
+
+// set entry date input to trusted date (silent fallback)
+async function setEntryDateToToday(){
+  const iso = await getTrustedDateISO();
+  const dateOnly = iso.slice(0,10);
+  const el = document.getElementById('entryDate');
+  if(el) el.value = dateOnly;
+}
+
+// Badges definitions & logic (same as before)
+const BADGES = [
+  { id:'steps_bronze', label:'Bronze – 5,000 steps', emoji:'🥉', test: r => r.steps >= 5000 },
+  { id:'steps_silver', label:'Silver – 10,000 steps', emoji:'🥈', test: r => r.steps >= 10000 },
+  { id:'steps_gold', label:'Gold – 20,000 steps', emoji:'🥇', test: r => r.steps >= 20000 },
+  { id:'hydrated', label:'Hydrated – 8+ glasses', emoji:'💧', test: r => r.water >= 8 },
+  { id:'bmi_healthy', label:'Healthy BMI', emoji:'💚', test: (r, recs) => false },
+  { id:'streak7', label:'7-day Streak', emoji:'🔥', test: (r, recs) => false }
+];
+
+function checkBadgesForRecord(record, allRecords){
+  let badges = loadBadges();
+  const earned = new Set(badges.map(b=>b.id));
+  BADGES.forEach(b => {
+    if(b.id.startsWith('steps') || b.id === 'hydrated'){
+      try{
+        if(b.test(record)){
+          if(!earned.has(b.id)){ badges.push({id:b.id,label:b.label,emoji:b.emoji,date:new Date().toISOString().slice(0,10)}); earned.add(b.id); }
+        }
+      }catch(e){}
+    }
+  });
+  // BMI badge: use stored profile height if available
+  const username = sessionStorage.getItem('ht_active');
+  const profile = JSON.parse(localStorage.getItem(getProfileKey(username)) || '{}');
+  if(profile.height && (record.weight || record.weight===0)){
+    const h = Number(profile.height)/100;
+    const bmi = record.weight && h>0 ? (record.weight/(h*h)) : null;
+    if(bmi && bmi>=18.5 && bmi<25){
+      if(!earned.has('bmi_healthy')){ const b = BADGES.find(x=>x.id==='bmi_healthy'); badges.push({id:b.id,label:b.label,emoji:b.emoji,date:new Date().toISOString().slice(0,10)}); earned.add(b.id); }
+    }
+  }
+  // Streak: last 7 days present (using record.date)
+  const datesSet = new Set(allRecords.map(r=>r.date));
+  const endDate = new Date(record.date);
+  let streak = true;
+  for(let i=0;i<7;i++){
+    const d = new Date(endDate);
+    d.setDate(endDate.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    if(!datesSet.has(key)){ streak = false; break; }
+  }
+  if(streak && !earned.has('streak7')){ const b = BADGES.find(x=>x.id==='streak7'); badges.push({id:b.id,label:b.label,emoji:b.emoji,date:new Date().toISOString().slice(0,10)}); earned.add(b.id); }
+
+  saveBadges(badges);
+}
+
+// when BMI calculated via calculator, save height to profile and award BMI badge if normal
+function calcBMI(){
+  const hCm = Number(document.getElementById('bmiHeight').value);
+  const h = hCm/100;
+  const w = Number(document.getElementById('bmiWeight').value);
+  if(!h || !w){ alert('Enter height and weight'); return; }
+  const bmi = (w/(h*h)).toFixed(2);
+  let cat=''; if(bmi<18.5) cat='Underweight'; else if(bmi<25) cat='Normal'; else if(bmi<30) cat='Overweight'; else cat='Obese';
+  document.getElementById('bmiResult').innerText = `BMI: ${bmi} — ${cat}`;
+  const username = sessionStorage.getItem('ht_active');
+  if(username){
+    const profile = JSON.parse(localStorage.getItem(getProfileKey(username)) || '{}');
+    profile.height = hCm;
+    localStorage.setItem(getProfileKey(username), JSON.stringify(profile));
+    if(bmi>=18.5 && bmi<25){
+      let badges = loadBadges();
+      if(!badges.find(b=>b.id==='bmi_healthy')){ const meta = BADGES.find(x=>x.id==='bmi_healthy'); badges.push({id:meta.id,label:meta.label,emoji:meta.emoji,date:new Date().toISOString().slice(0,10)}); saveBadges(badges); renderBadges(); }
+    }
+  }
+}
+
+// render badges
+function renderBadges(){
+  const container = document.getElementById('badgesArea'); container.innerHTML='';
+  const badges = loadBadges();
+  badges.forEach(b=>{
+    const el = document.createElement('div'); el.className='badge'; el.innerHTML = `<span style="font-size:1.2rem">${b.emoji}</span><div><strong>${b.label}</strong><div class="small">${b.date}</div></div>`;
+    container.appendChild(el);
+  });
+}
+
+// render dashboard + charts + records
+let chartSteps, chartWeight, chartSleep;
+function renderAll(){
+  const username = sessionStorage.getItem('ht_active'); if(!username) return;
+  document.getElementById('userLabel').innerText = username;
+  const records = loadUserData();
+  const summary = document.getElementById('summaryCards');
+  if(records.length === 0){ summary.innerHTML = '<div class="small">No data yet</div>'; }
+  else {
+    const avgSteps = Math.round(records.reduce((s,r)=> s + (r.steps||0),0)/records.length);
+    const avgSleep = (records.reduce((s,r)=> s + (r.sleep||0),0)/records.length).toFixed(1);
+    const avgWater = (records.reduce((s,r)=> s + (r.water||0),0)/records.length).toFixed(1);
+    const latestWeight = records[records.length-1].weight || 0;
+    summary.innerHTML = `<div class="small"><strong>Avg Steps:</strong> ${avgSteps}</div>
+                         <div class="small"><strong>Avg Sleep:</strong> ${avgSleep} hrs</div>
+                         <div class="small"><strong>Avg Water:</strong> ${avgWater} glasses</div>
+                         <div class="small"><strong>Latest Weight:</strong> ${latestWeight} kg</div>`;
+  }
+
+  // step goal progress
+  const stepGoal = Number(document.getElementById('stepGoal').value) || 10000;
+  const today = new Date().toISOString().slice(0,10);
+  const totalToday = records.filter(r=> r.date === today).reduce((s,r)=> s + (r.steps||0),0);
+  document.getElementById('stepProgress').max = stepGoal;
+  document.getElementById('stepProgress').value = totalToday;
+  document.getElementById('stepProgressText').innerText = `${totalToday} / ${stepGoal} steps`;
+
+  // charts data
+  const labels = records.map(r=> r.date);
+  const stepsData = records.map(r=> r.steps || 0);
+  const weightData = records.map(r=> r.weight || 0);
+  const sleepData = records.map(r=> r.sleep || 0);
+
+  if(chartSteps) chartSteps.destroy();
+  if(chartWeight) chartWeight.destroy();
+  if(chartSleep) chartSleep.destroy();
+
+  const ctxS = document.getElementById('chartSteps').getContext('2d');
+  chartSteps = new Chart(ctxS, {type:'line', data:{labels, datasets:[{label:'Steps', data:stepsData, borderColor:'#27ae60', fill:false}]}});
+
+  const ctxW = document.getElementById('chartWeight').getContext('2d');
+  chartWeight = new Chart(ctxW, {type:'line', data:{labels, datasets:[{label:'Weight (kg)', data:weightData, borderColor:'#2980b9', fill:false}]}});
+
+  const ctxL = document.getElementById('chartSleep').getContext('2d');
+  chartSleep = new Chart(ctxL, {type:'bar', data:{labels, datasets:[{label:'Sleep (hrs)', data:sleepData, backgroundColor:'#f1c40f'}]}});
+
+  const list = document.getElementById('recordsList');
+  if(records.length === 0) list.innerHTML = '<div class="small">No records yet</div>';
+  else list.innerHTML = records.map(r=> `<div style="padding:6px;border-bottom:1px solid #eee"><strong>${r.date}</strong> — Steps: ${r.steps||0}, Weight: ${r.weight||0}kg, Sleep: ${r.sleep||0}h, Water: ${r.water||0}, Mood: ${r.mood||''}</div>`).join('');
+
+  renderBadges();
+}
+
+// export CSV
+function exportCSV(){
+  const username = sessionStorage.getItem('ht_active'); if(!username) return;
+  const records = loadUserData(); if(records.length===0){ alert('No data to export'); return; }
+  const header = ['date','steps','weight','sleep','water','mood'];
+  const rows = records.map(r=> header.map(h=> r[h]===undefined?'':String(r[h])).join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = username + '-health.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+// clear user data
+function clearUserData(){ if(!confirm('Clear all your data?')) return; const username = sessionStorage.getItem('ht_active'); localStorage.setItem(getUserDataKey(username), JSON.stringify([])); saveBadges([]); renderAll(); }
+
+// helper getKeyForUser (used above)
+function getUserDataKey(username){ return 'ht_data_' + username; }
+
+// on load check session
+window.addEventListener('load', ()=>{ const active = sessionStorage.getItem('ht_active'); if(active) showApp(); document.getElementById('stepGoal').addEventListener('change', renderAll); });
+
+// service worker registration
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').then(()=>console.log('sw registered')).catch(()=>{}); }
+</script>
+
+<!-- Health Score & Achievements -->
+<div class="card">
+  <h2>🏆 Health Score & Achievements</h2>
+  <p id="healthScore">Health Score: 0/100</p>
+  <p id="badge">Badge: None</p>
+</div>
+
+<!-- Daily Health Tip -->
+<div class="card">
+  <h2>💡 Daily Health Tip</h2>
+  <p id="dailyTip">Stay active and drink enough water!</p>
+</div>
+
+</body>
+</html>
